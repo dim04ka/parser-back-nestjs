@@ -11,6 +11,11 @@ module.exports = {
     'plugin:prettier/recommended',
   ],
   root: true,
+  globals: {
+    $: true,
+    require: true,
+    process: true
+  },
   env: {
     node: true,
     jest: true,

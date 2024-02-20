@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
-  }
+  parserItems$ = new BehaviorSubject([]);
+  constructor() {}
 }

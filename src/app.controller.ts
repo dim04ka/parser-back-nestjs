@@ -1,12 +1,22 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { FirestoreService } from './firestore/firestore.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  transactionsArray = [];
+  constructor(private db: FirestoreService) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Get('')
+  async getHello(): Promise<any[]> {
+    const resultSync = await this.db
+      .getFirestoreInstance()
+      .collection('parser-sync')
+      .doc('iT1hGDYGNvuC0FpeOKoH')
+      .get();
+
+    if (resultSync.exists) {
+      this.transactionsArray = resultSync.data().date;
+    }
+    return this.transactionsArray;
   }
 }
