@@ -17,6 +17,6 @@ export class AppController {
     if (resultSync.exists) {
       this.transactionsArray = resultSync.data().date;
     }
-    return ['test'];
+    return this.transactionsArray;
   }
 }
