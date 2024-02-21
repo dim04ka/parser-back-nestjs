@@ -27,7 +27,7 @@ export class ScanningService {
   }
 
   async startScanning() {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
     await page.goto(
       'https://www.myparts.ge/ka/search/?pr_type_id=3&page=1&cat_id=765',
