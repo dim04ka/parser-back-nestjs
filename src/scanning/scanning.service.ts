@@ -37,7 +37,7 @@ export class ScanningService {
     // https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=6&page=1
     const page = await browser.newPage();
     await page.goto(
-      'https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=6&page=1',
+      'https://www.myparts.ge/ka/search/?pr_type_id=3&page=1&cat_id=765',
     );
 
     await page.setViewport({ width: 1080, height: 1024 });
