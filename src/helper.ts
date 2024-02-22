@@ -8,6 +8,7 @@ export function getCurrentDate() {
 
 export function getCurrentTime() {
   const currentDate = new Date();
+  currentDate.setHours(currentDate.getHours() + 4);
   const hour = String(currentDate.getHours()).padStart(2, '0');
   const minute = String(currentDate.getMinutes()).padStart(2, '0');
   const second = String(currentDate.getSeconds()).padStart(2, '0');

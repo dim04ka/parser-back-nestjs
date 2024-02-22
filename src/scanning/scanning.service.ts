@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import puppeteer from 'puppeteer';
 import axios from 'axios';
 import { delay, getCurrentDate, getCurrentTime } from '../helper';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AppService } from '../app.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { FirestoreService } from '../firestore/firestore.service';
@@ -19,7 +18,7 @@ export class ScanningService {
     private db: FirestoreService,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_HOUR)
   async handleScanData() {
     await this.startScanning();
     await this.firestoreData();
