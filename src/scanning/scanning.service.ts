@@ -59,7 +59,7 @@ export class ScanningService {
         return match ? match[0] : null; // Возвращаем найденную дату или null, если ничего не найдено
       });
 
-      if (time !== getCurrentDate()) break;
+      if (time !== getCurrentDate()) continue;
       const href = await element.evaluate((el) => el.href);
 
       const newPage = await browser.newPage();
