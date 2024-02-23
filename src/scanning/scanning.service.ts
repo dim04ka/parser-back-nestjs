@@ -33,11 +33,13 @@ export class ScanningService {
     // version 2.0
     // url = https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=672&page=1
 
+    //https://www.myparts.ge/ka/search/?pr_type_id=3&page=1 root url
+
     //https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=998&page=1   work
     // https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=6&page=1
     const page = await browser.newPage();
     await page.goto(
-      'https://www.myparts.ge/ka/search/?pr_type_id=3&page=1&cat_id=765',
+      'https://www.myparts.ge/ka/search/?pr_type_id=3&page=1',
     );
 
     await page.setViewport({ width: 1080, height: 1024 });
