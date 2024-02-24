@@ -1,3 +1,34 @@
+//{
+//  "compilerOptions": {
+//    "resolveJsonModule": true,
+//    "module": "commonjs",
+//    "declaration": true,
+//    "removeComments": true,
+//    "emitDecoratorMetadata": true,
+//    "experimentalDecorators": true,
+//    "allowSyntheticDefaultImports": true,
+//    "allowJs": true,
+//    "target": "es2020",
+//    "sourceMap": true,
+//    "outDir": "./dist",
+//    "baseUrl": "./",
+//    "incremental": true,
+//    "skipLibCheck": true,
+//    "strictNullChecks": false,
+//    "noImplicitAny": false,
+//    "strictBindCallApply": false,
+//    "forceConsistentCasingInFileNames": false,
+//    "noFallthroughCasesInSwitch": true,
+//    "paths": {
+//      "*": ["node_modules/*", "./*"]
+//    },
+//    "sourceRoot": "src",
+//    "assets": [{ "include": "static/testdata/**/*", "watchAssets": true }]
+//  },
+//  "include": ["src/**/*", "tests/**/*"],
+//  "exclude": ["node_modules", "dist", "coverage", "build", "docs"],
+//}
+//
 {
   "compilerOptions": {
     "resolveJsonModule": true,
@@ -7,7 +38,10 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
+    "allowJs": true,
+    "target": "node",
+    "esModuleInterop": true,
+    "strict": true,
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -16,7 +50,14 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "*": ["node_modules/*", "./*"]
+    },
+    "sourceRoot": "src",
+    "assets": [{ "include": "static/testdata/**/*", "watchAssets": true }]
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist", "coverage", "build", "docs"],
 }

@@ -9,6 +9,8 @@ import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
 import * as process from 'process';
 
+import { TelegramBotService } from '../telegram-bot/telegram-bot.service';
+
 dotenv.config();
 
 @Injectable()
@@ -16,6 +18,7 @@ export class ScanningService {
   constructor(
     private AppService: AppService,
     private db: FirestoreService,
+    private readonly telegramBotService: TelegramBotService,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -39,7 +42,7 @@ export class ScanningService {
     // https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=6&page=1
     const page = await browser.newPage();
     await page.goto(
-      'https://www.myparts.ge/ka/search/?pr_type_id=3&page=1',
+      'https://www.myparts.ge/ka/search/?pr_type_id=3&page=1&cat_id=765',
     );
 
     await page.setViewport({ width: 1080, height: 1024 });
@@ -91,7 +94,7 @@ export class ScanningService {
           '.custom-scroll-bar.custom-scroll-bar-animated',
         );
         const description = await newPage.evaluate(
-          (el: HTMLElement) => el.innerText,
+          (el) => (el as HTMLElement).innerText,
           descriptionElement,
         );
 
@@ -137,10 +140,14 @@ export class ScanningService {
     }
 
     await browser.close();
-    console.log('End Scanning...', this.AppService.parserItems$.getValue().length);
+    console.log(
+      'End Scanning...',
+      this.AppService.parserItems$.getValue().length,
+    );
   }
 
   async getBotUpdates() {
+    console.log('getBotUpdates run ...');
     const parserCollection = this.db
       .getFirestoreInstance()
       .collection('parser');
@@ -150,20 +157,20 @@ export class ScanningService {
       elementsArray.push(doc.data());
     });
 
-    for (const elem of elementsArray) {
-      axios
-        .post(
-          `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendPhoto`,
-          {
-            chat_id: process.env.TELEGRAM_CHAT_ID,
-            photo: elem.image,
-            caption: `${elem.date} ${elem.phone} - ${elem.title} - ${elem.description} - price:${elem.price}`,
-          },
-        )
-        .catch(function (error) {
-          console.error('Error sending photo to Telegram:', error);
-        });
-    }
+    let index = 0;
+    const interval = setInterval(() => {
+      if (index < elementsArray.length) {
+        const elem = elementsArray[index];
+
+        // const imageUrl = 'https://static.my.ge/myparts/photos/large/0223/12448580_1.jpg';
+
+        this.sendPhotoToTelegram(elem);
+        console.log('count:', index);
+        index++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 1000);
   }
 
   async firestoreData() {
@@ -194,15 +201,11 @@ export class ScanningService {
 
       if (elementsSent.exists) {
         const data = elementsSent.data();
-        elementsSentArray.push(...data.ids);
+        if (data) {
+          elementsSentArray.push(...data['ids']);
+        }
       }
       if (elementsSentArray.includes(data[i].id)) continue;
-      await this.db
-        .getFirestoreInstance()
-        .collection('parser-sent')
-        .doc('nqgFIUARWVg26mcLMtB4')
-        .set({ ids: [...elementsSentArray, data[i].id] });
-
       const uniqueId = uuidv4();
 
       const userJson = {
@@ -229,10 +232,12 @@ export class ScanningService {
     const transactions = [];
     if (resultSync.exists) {
       const data = resultSync.data();
-      transactions.push(
-        ...data.date,
-        `${getCurrentDate()} ${getCurrentTime()}`,
-      );
+      if (data) {
+        transactions.push(
+          ...data['date'],
+          `${getCurrentDate()} ${getCurrentTime()}`,
+        );
+      }
     }
 
     await this.db
@@ -240,5 +245,33 @@ export class ScanningService {
       .collection('parser-sync')
       .doc('iT1hGDYGNvuC0FpeOKoH')
       .set({ date: transactions });
+  }
+
+  async sendPhotoToTelegram(elem: any, retries = 3) {
+    try {
+      const imageUrl = elem.image;
+      const chatId = '-1001920945476';
+      const caption = `${elem.date} ${elem.phone} - ${elem.title} - ${elem.description} - price:${elem.price}`;
+      await this.telegramBotService.sendPhotoToGroup(imageUrl, chatId, caption);
+      const elementsSentArray = [];
+      const elementsSent = await this.db
+        .getFirestoreInstance()
+        .collection('parser-sent')
+        .doc('nqgFIUARWVg26mcLMtB4')
+        .get();
+
+      if (elementsSent.exists) {
+        const data = elementsSent.data();
+        if (data) {
+          elementsSentArray.push(...data['ids']);
+        }
+      }
+
+      await this.db
+        .getFirestoreInstance()
+        .collection('parser-sent')
+        .doc('nqgFIUARWVg26mcLMtB4')
+        .set({ ids: [...elementsSentArray, elem.id] });
+    } catch (error) {}
   }
 }
