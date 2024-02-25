@@ -32,11 +32,12 @@ export class ScanningService {
 
   async startScanning() {
     console.log('Starting Scanning...');
-    let count = 0;
+    let hasBlockModal = true;
     const urls = [
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
+      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.712', // 4/114.3
     ];
     const browser = await puppeteer.launch({ headless: true });
 
@@ -46,14 +47,14 @@ export class ScanningService {
       await page.goto(url);
       await page.setViewport({ width: 1080, height: 1024 });
 
-      if (count === 0) {
+      if (hasBlockModal) {
         await page.waitForSelector(
           '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
         );
         await page.click(
           '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
         );
-        count++;
+        hasBlockModal = false;
       }
 
       // await page.screenshot({path: 'example.png'});
@@ -259,7 +260,13 @@ export class ScanningService {
       const imageUrl = elem.image;
       const chatId = '-1001920945476';
       // const local = '-1002144996647';
-      const caption = `${elem.date} ${elem.phone} - ${elem.title} - ${elem.description} - price:${elem.price}`;
+      const caption = `
+${elem.title}      
+⏰${elem.date} 
+📞${elem.phone.slice(4)}
+💰${elem.price}
+${elem.description}
+`;
       await this.telegramBotService.sendPhotoToGroup(imageUrl, chatId, caption);
       const elementsSentArray = [];
       const elementsSent = await this.db
