@@ -32,118 +32,115 @@ export class ScanningService {
 
   async startScanning() {
     console.log('Starting Scanning...');
+    const urls = [
+      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
+      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
+      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
+    ];
     const browser = await puppeteer.launch({ headless: true });
-    // version 1.0
-    // url = https://www.myparts.ge/ka/search/?pr_type_id=3&page=1&cat_id=765  work
-    // version 2.0
-    // url = https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=672&page=1
 
-    //https://www.myparts.ge/ka/search/?pr_type_id=3&page=1 root url
+    for (const url of urls) {
+      const page = await browser.newPage();
+      await page.goto(url);
+      await page.setViewport({ width: 1080, height: 1024 });
 
-    //https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=998&page=1   work
-    // https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=6&page=1
-    // https://www.myparts.ge/ru/search/?pr_type_id=3
-    // https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714
-    const page = await browser.newPage();
-    await page.goto(
-      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714',
-    );
-
-    await page.setViewport({ width: 1080, height: 1024 });
-
-    await page.waitForSelector(
-      '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
-    );
-    await page.click(
-      '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
-    );
-    // await page.screenshot({path: 'example.png'});
-    const elements = await page.$$('div.row a.text-dark');
-
-    for (const element of elements) {
-      const timeElement = await element.$('.bot_content div div');
-      const time = await timeElement.evaluate((el) => {
-        const regex = /(\d{2}\.\d{2}\.\d{4})/; // Регулярное выражение для поиска даты в формате dd.mm.yyyy
-        const match = el.innerText.match(regex); // Поиск соответствия регулярному выражению
-        return match ? match[0] : null; // Возвращаем найденную дату или null, если ничего не найдено
-      });
-
-      if (time !== getCurrentDate()) continue;
-      const href = await element.evaluate((el) => el.href);
-
-      const newPage = await browser.newPage();
-      await newPage.goto(href);
-
-      const yourElement = await newPage.$(
-        '.shadow-filter-options-all i.stroke-bluepart-100',
+      await page.waitForSelector(
+        '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
       );
-      if (yourElement) {
-        await yourElement.click();
-        await delay(500);
+      await page.click(
+        '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
+      );
+      // await page.screenshot({path: 'example.png'});
+      const elements = await page.$$('div.row a.text-dark');
 
-        const phoneElement = await newPage.$(
-          '.shadow-filter-options-all a[href^="tel"]',
-        );
-        const phone = await newPage.evaluate((el) => el.href, phoneElement);
+      for (const element of elements) {
+        const timeElement = await element.$('.bot_content div div');
+        const time = await timeElement.evaluate((el) => {
+          const regex = /(\d{2}\.\d{2}\.\d{4})/; // Регулярное выражение для поиска даты в формате dd.mm.yyyy
+          const match = el.innerText.match(regex); // Поиск соответствия регулярному выражению
+          return match ? match[0] : null; // Возвращаем найденную дату или null, если ничего не найдено
+        });
 
-        const titleElement = await newPage.$(
-          'div.mb-16px.text-overflow-ellipses-3-line.font-size-md-24.font-size-16.font-TBCX-bold',
-        );
-        const title = await newPage.evaluate(
-          (el) => el.innerText,
-          titleElement,
-        );
+        if (time !== getCurrentDate()) continue;
+        const href = await element.evaluate((el) => el.href);
 
-        const descriptionElement = await newPage.$(
-          '.custom-scroll-bar.custom-scroll-bar-animated',
-        );
-        const description = await newPage.evaluate(
-          (el) => (el as HTMLElement).innerText,
-          descriptionElement,
-        );
+        const newPage = await browser.newPage();
+        await newPage.goto(href);
 
-        const imageElement = await newPage.$('div.swiper-wrapper img');
-        const image = await newPage.evaluate((el) => el.src, imageElement);
+        const yourElement = await newPage.$(
+          '.shadow-filter-options-all i.stroke-bluepart-100',
+        );
+        if (yourElement) {
+          await yourElement.click();
+          await delay(500);
 
-        const priceElement = await newPage.$('.shadow-filter-options-all span');
-        const price = await newPage.evaluate(
-          (el) => el.innerHTML,
-          priceElement,
-        );
+          const phoneElement = await newPage.$(
+            '.shadow-filter-options-all a[href^="tel"]',
+          );
+          const phone = await newPage.evaluate((el) => el.href, phoneElement);
 
-        const dateElement = await newPage.$(
-          '.mb-24px.font-TBCX-medium.font-size-12',
-        );
-        const date = await newPage.evaluate(
-          (el) => (el.children[1] as HTMLElement).innerText,
-          dateElement,
-        );
+          const titleElement = await newPage.$(
+            'div.mb-16px.text-overflow-ellipses-3-line.font-size-md-24.font-size-16.font-TBCX-bold',
+          );
+          const title = await newPage.evaluate(
+            (el) => el.innerText,
+            titleElement,
+          );
 
-        const idElement = await newPage.$(
-          '.mb-24px.font-TBCX-medium.font-size-12',
-        );
-        const id = await newPage.evaluate(
-          (el) => (el.children[2] as HTMLElement).innerText,
-          idElement,
-        );
+          const descriptionElement = await newPage.$(
+            '.custom-scroll-bar.custom-scroll-bar-animated',
+          );
+          const description = await newPage.evaluate(
+            (el) => (el as HTMLElement).innerText,
+            descriptionElement,
+          );
 
-        this.AppService.parserItems$.next([
-          ...this.AppService.parserItems$.getValue(),
-          {
-            phone,
-            title,
-            description: description || '',
-            image,
-            price,
-            date,
-            id,
-          },
-        ]);
+          const imageElement = await newPage.$('div.swiper-wrapper img');
+          const image = await newPage.evaluate((el) => el.src, imageElement);
+
+          const priceElement = await newPage.$(
+            '.shadow-filter-options-all span',
+          );
+          const price = await newPage.evaluate(
+            (el) => el.innerHTML,
+            priceElement,
+          );
+
+          const dateElement = await newPage.$(
+            '.mb-24px.font-TBCX-medium.font-size-12',
+          );
+          const date = await newPage.evaluate(
+            (el) => (el.children[1] as HTMLElement).innerText,
+            dateElement,
+          );
+
+          const idElement = await newPage.$(
+            '.mb-24px.font-TBCX-medium.font-size-12',
+          );
+          const id = await newPage.evaluate(
+            (el) => (el.children[2] as HTMLElement).innerText,
+            idElement,
+          );
+
+          this.AppService.parserItems$.next([
+            ...this.AppService.parserItems$.getValue(),
+            {
+              phone,
+              title,
+              description: description || '',
+              image,
+              price,
+              date,
+              id,
+            },
+          ]);
+        }
+        await newPage.close();
       }
-      await newPage.close();
+
+      await page.close();
     }
 
-    await browser.close();
     console.log(
       'End Scanning...',
       this.AppService.parserItems$.getValue().length,
