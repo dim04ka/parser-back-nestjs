@@ -9,8 +9,8 @@ export class TelegramBotService {
   private readonly bot: Telegraf;
 
   constructor() {
-    // this.bot = new Telegraf('6704239325:AAHZMAyo92DAJuUYmtWth0NQEZAMw9S7KG8');
-    // this.bot.launch();
+    this.bot = new Telegraf('6704239325:AAHZMAyo92DAJuUYmtWth0NQEZAMw9S7KG8');
+    this.bot.launch();
   }
 
   async sendPhotoToGroup(

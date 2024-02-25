@@ -32,24 +32,30 @@ export class ScanningService {
 
   async startScanning() {
     console.log('Starting Scanning...');
+    let count = 0;
     const urls = [
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
     ];
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: false });
 
     for (const url of urls) {
+      console.log('Scanning url: ', url);
       const page = await browser.newPage();
       await page.goto(url);
       await page.setViewport({ width: 1080, height: 1024 });
 
-      await page.waitForSelector(
-        '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
-      );
-      await page.click(
-        '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
-      );
+      if (count === 0) {
+        await page.waitForSelector(
+          '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
+        );
+        await page.click(
+          '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
+        );
+        count++;
+      }
+
       // await page.screenshot({path: 'example.png'});
       const elements = await page.$$('div.row a.text-dark');
 
