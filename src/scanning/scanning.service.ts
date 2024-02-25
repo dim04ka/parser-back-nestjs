@@ -10,11 +10,13 @@ import * as dotenv from 'dotenv';
 import * as process from 'process';
 
 import { TelegramBotService } from '../telegram-bot/telegram-bot.service';
+import { BehaviorSubject } from 'rxjs';
 
 dotenv.config();
 
 @Injectable()
 export class ScanningService {
+  items$ = new BehaviorSubject([]);
   constructor(
     private AppService: AppService,
     private db: FirestoreService,
@@ -40,9 +42,11 @@ export class ScanningService {
 
     //https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=998&page=1   work
     // https://www.myparts.ge/ru/search/?pr_type_id=3&cat_id=6&page=1
+    // https://www.myparts.ge/ru/search/?pr_type_id=3
+    // https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714
     const page = await browser.newPage();
     await page.goto(
-      'https://www.myparts.ge/ka/search/?pr_type_id=3&page=1&cat_id=765',
+      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714',
     );
 
     await page.setViewport({ width: 1080, height: 1024 });
@@ -251,6 +255,7 @@ export class ScanningService {
     try {
       const imageUrl = elem.image;
       const chatId = '-1001920945476';
+      // const local = '-1002144996647';
       const caption = `${elem.date} ${elem.phone} - ${elem.title} - ${elem.description} - price:${elem.price}`;
       await this.telegramBotService.sendPhotoToGroup(imageUrl, chatId, caption);
       const elementsSentArray = [];
@@ -272,6 +277,8 @@ export class ScanningService {
         .collection('parser-sent')
         .doc('nqgFIUARWVg26mcLMtB4')
         .set({ ids: [...elementsSentArray, elem.id] });
-    } catch (error) {}
+    } catch (error) {
+      console.log('error sending to telegraf');
+    }
   }
 }
