@@ -184,19 +184,19 @@ export class ScanningService {
     });
 
     let index = 0;
-    const interval = setInterval(() => {
-      if (index < elementsArray.length) {
-        const elem = elementsArray[index];
+    if (elementsArray.length > 0) {
+      const interval = setInterval(() => {
+        if (index < elementsArray.length) {
+          const elem = elementsArray[index];
 
-        // const imageUrl = 'https://static.my.ge/myparts/photos/large/0223/12448580_1.jpg';
-
-        this.sendPhotoToTelegram(elem);
-        console.log('count:', index);
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 1000);
+          this.sendPhotoToTelegram(elem);
+          console.log('count:', index);
+          index++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 1000);
+    }
   }
 
   async firestoreData() {
