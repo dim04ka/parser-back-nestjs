@@ -14,17 +14,32 @@ export class TelegramBotService {
   }
 
   async sendPhotoToGroup(
-    imageUrl: string,
+    imageUrls: string[],
     chatId: string,
     caption: string,
   ): Promise<void> {
     try {
-      const imageData = await this.downloadImage(imageUrl);
-      await this.bot.telegram.sendPhoto(
-        chatId,
-        { source: imageData },
-        { caption },
-      );
+      const media = [];
+
+      for (let i = 0; i < imageUrls.length; i++) {
+        const localImagePath = await this.downloadImage(imageUrls[i]);
+        const imageData = fs.createReadStream(localImagePath);
+
+        media.push({
+          type: 'photo',
+          media: { source: imageData },
+          caption: i === 0 ? caption : '',
+        });
+      }
+
+      await this.bot.telegram.sendMediaGroup(chatId, media);
+
+      // const imageData = await this.downloadImage(imageUrl);
+      // await this.bot.telegram.sendPhoto(
+      //   chatId,
+      //   { source: imageData },
+      //   { caption },
+      // );
       console.log('Photo sent successfully to group');
     } catch (error) {
       console.error('Failed to send photo to group:', error);

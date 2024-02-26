@@ -16,7 +16,6 @@ dotenv.config();
 
 @Injectable()
 export class ScanningService {
-  items$ = new BehaviorSubject([]);
   constructor(
     private AppService: AppService,
     private db: FirestoreService,
@@ -35,9 +34,9 @@ export class ScanningService {
     let hasBlockModal = true;
     const urls = [
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
-      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
-      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
-      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.712', // 4/114.3
+      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
+      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
+      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.712', // 4/114.3
     ];
     const browser = await puppeteer.launch({ headless: true });
 
@@ -102,8 +101,27 @@ export class ScanningService {
             descriptionElement,
           );
 
-          const imageElement = await newPage.$('div.swiper-wrapper img');
-          const image = await newPage.evaluate((el) => el.src, imageElement);
+          let images = [];
+
+          const imageElements = await newPage.$$(
+            '#root > main > div > div.container.max-width-1270px > div.row.mx-n12px > div.col.px-12px.overflow-hidden.mb-56px > div.d-flex.flex-lg-row.flex-column.mb-md-56px.mb-20px > div.w-lg-500px.w-100.min-width-lg-500px.z-index-1.mb-lg-0.mb-18px.max-width-lg-500px > div.custom-scroll-bar.horiz.d-md-block.d-none > div > div > div.swiper-wrapper .swiper-slide img',
+          );
+          if (!imageElements.length) {
+            const imageElement = await newPage.$('div.swiper-wrapper img');
+            const image = await newPage.evaluate((el) => el.src, imageElement);
+            images.push(image);
+          } else {
+            if (imageElements && imageElements.length > 0) {
+              images = await Promise.all(
+                imageElements.map(async (element) => {
+                  return await element.evaluate((el) => el.src);
+                }),
+              );
+            }
+          }
+
+          console.log(images);
+          // document.querySelector('#root > main > div > div.container.max-width-1270px > div.row.mx-n12px > div.col.px-12px.overflow-hidden.mb-56px > div.d-flex.flex-lg-row.flex-column.mb-md-56px.mb-20px > div.w-lg-500px.w-100.min-width-lg-500px.z-index-1.mb-lg-0.mb-18px.max-width-lg-500px > div.custom-scroll-bar.horiz.d-md-block.d-none > div > div > div.swiper-wrapper')
 
           const priceElement = await newPage.$(
             '.shadow-filter-options-all span',
@@ -135,7 +153,7 @@ export class ScanningService {
               phone,
               title,
               description: description || '',
-              image,
+              image: images,
               price,
               date,
               id,
@@ -257,7 +275,7 @@ export class ScanningService {
 
   async sendPhotoToTelegram(elem: any, retries = 3) {
     try {
-      const imageUrl = elem.image;
+      // const imageUrl = elem.image;
       const chatId = '-1001920945476';
       // const local = '-1002144996647';
       const caption = `
@@ -267,7 +285,13 @@ ${elem.title}
 💰${elem.price}
 ${elem.description}
 `;
-      await this.telegramBotService.sendPhotoToGroup(imageUrl, chatId, caption);
+
+      await this.telegramBotService.sendPhotoToGroup(
+        elem.image,
+        chatId,
+        caption,
+      );
+
       const elementsSentArray = [];
       const elementsSent = await this.db
         .getFirestoreInstance()
