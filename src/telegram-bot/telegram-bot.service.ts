@@ -31,7 +31,7 @@ export class TelegramBotService {
           caption: i === 0 ? caption : '',
         });
       }
-
+      console.log('media=', media);
       await this.bot.telegram.sendMediaGroup(chatId, media);
 
       // const imageData = await this.downloadImage(imageUrl);
