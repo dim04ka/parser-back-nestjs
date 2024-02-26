@@ -9,8 +9,8 @@ export class TelegramBotService {
   private readonly bot: Telegraf;
 
   constructor() {
-    // this.bot = new Telegraf('6704239325:AAHZMAyo92DAJuUYmtWth0NQEZAMw9S7KG8');
-    // this.bot.launch();
+    this.bot = new Telegraf('6704239325:AAHZMAyo92DAJuUYmtWth0NQEZAMw9S7KG8');
+    this.bot.launch();
   }
 
   async sendPhotoToGroup(
@@ -19,27 +19,27 @@ export class TelegramBotService {
     caption: string,
   ): Promise<void> {
     try {
+      let firstThreeImageUrl = [];
       const media = [];
+      if (imageUrls.length > 3) {
+        firstThreeImageUrl = imageUrls.slice(0, 3);
+      } else {
+        firstThreeImageUrl = imageUrls;
+      }
 
-      for (let i = 0; i < imageUrls.length; i++) {
+      for (let i = 0; i < firstThreeImageUrl.length; i++) {
         const localImagePath = await this.downloadImage(imageUrls[i]);
-        const imageData = fs.createReadStream(localImagePath);
+        // const imageData = fs.createReadStream(localImagePath);
 
         media.push({
           type: 'photo',
-          media: { source: imageData },
+          media: { source: localImagePath },
           caption: i === 0 ? caption : '',
         });
       }
-      console.log('media=', media);
+
       await this.bot.telegram.sendMediaGroup(chatId, media);
 
-      // const imageData = await this.downloadImage(imageUrl);
-      // await this.bot.telegram.sendPhoto(
-      //   chatId,
-      //   { source: imageData },
-      //   { caption },
-      // );
       console.log('Photo sent successfully to group');
     } catch (error) {
       console.error('Failed to send photo to group:', error);

@@ -10,7 +10,6 @@ import * as dotenv from 'dotenv';
 import * as process from 'process';
 
 import { TelegramBotService } from '../telegram-bot/telegram-bot.service';
-import { BehaviorSubject } from 'rxjs';
 
 dotenv.config();
 
@@ -24,9 +23,9 @@ export class ScanningService {
 
   @Cron(CronExpression.EVERY_HOUR)
   async handleScanData() {
-    // await this.startScanning();
-    // await this.firestoreData();
-    // await this.getBotUpdates();
+    await this.startScanning();
+    await this.firestoreData();
+    await this.getBotUpdates();
   }
 
   async startScanning() {
@@ -194,9 +193,11 @@ export class ScanningService {
           index++;
         } else {
           clearInterval(interval);
+          console.log('end count');
         }
       }, 1000);
     }
+    console.log('end count2');
   }
 
   async firestoreData() {
@@ -291,6 +292,7 @@ ${elem.description}
         chatId,
         caption,
       );
+      console.log('send id', elem.id);
 
       const elementsSentArray = [];
       const elementsSent = await this.db
