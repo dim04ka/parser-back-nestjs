@@ -173,6 +173,25 @@ export class ScanningService {
       'Ids = ',
       this.AppService.parserItems$.getValue().map((el) => el.id),
     );
+
+    const values = this.AppService.parserItems$.getValue();
+    const elementsSentArray = [];
+    const elementsSent = await this.db
+      .getFirestoreInstance()
+      .collection('parser-sent')
+      .doc('nqgFIUARWVg26mcLMtB4')
+      .get();
+
+    if (elementsSent.exists) {
+      const data = elementsSent.data();
+      if (data) {
+        elementsSentArray.push(...data['ids']);
+      }
+    }
+    const items = values.filter((el) => !elementsSentArray.includes(el.id));
+    this.AppService.parserItems$.next(items);
+    console.log('items', items);
+    // if (elementsSentArray.includes(data[i].id)) continue;
   }
 
   async getBotUpdates() {
@@ -224,20 +243,20 @@ export class ScanningService {
     const itemsLength = this.AppService.parserItems$.getValue().length;
 
     for (let i = 0; i < itemsLength; i++) {
-      const elementsSentArray = [];
-      const elementsSent = await this.db
-        .getFirestoreInstance()
-        .collection('parser-sent')
-        .doc('nqgFIUARWVg26mcLMtB4')
-        .get();
-
-      if (elementsSent.exists) {
-        const data = elementsSent.data();
-        if (data) {
-          elementsSentArray.push(...data['ids']);
-        }
-      }
-      if (elementsSentArray.includes(data[i].id)) continue;
+      // const elementsSentArray = [];
+      // const elementsSent = await this.db
+      //   .getFirestoreInstance()
+      //   .collection('parser-sent')
+      //   .doc('nqgFIUARWVg26mcLMtB4')
+      //   .get();
+      //
+      // if (elementsSent.exists) {
+      //   const data = elementsSent.data();
+      //   if (data) {
+      //     elementsSentArray.push(...data['ids']);
+      //   }
+      // }
+      // if (elementsSentArray.includes(data[i].id)) continue;
       const uniqueId = uuidv4();
 
       const userJson = {
