@@ -169,17 +169,13 @@ export class ScanningService {
       'End Scanning...',
       this.AppService.parserItems$.getValue().length,
     );
-    console.log(
-      'Ids = ',
-      this.AppService.parserItems$.getValue().map((el) => el.id),
-    );
 
     const values = this.AppService.parserItems$.getValue();
     const elementsSentArray = [];
     const elementsSent = await this.db
       .getFirestoreInstance()
       .collection('parser-sent')
-      .doc('nqgFIUARWVg26mcLMtB4')
+      .doc('QajI331I2OoGHlQY5unW')
       .get();
 
     if (elementsSent.exists) {
@@ -190,7 +186,10 @@ export class ScanningService {
     }
     const items = values.filter((el) => !elementsSentArray.includes(el.id));
     this.AppService.parserItems$.next(items);
-    console.log('items', items);
+    console.log(
+      'items',
+      items.map((el) => el.id),
+    );
     // if (elementsSentArray.includes(data[i].id)) continue;
   }
 
@@ -218,27 +217,27 @@ export class ScanningService {
           clearInterval(interval);
           console.log('end count');
         }
-      }, 0);
+      }, 1000);
     } else {
-      console.log('end count2');
+      console.log('end getBotUpdates');
     }
   }
 
   async firestoreData() {
-    const snapshot = await this.db
-      .getFirestoreInstance()
-      .collection('parser')
-      .get();
-    const promises = [];
-    snapshot.forEach((doc) => {
-      const promise = this.db
-        .getFirestoreInstance()
-        .collection('parser')
-        .doc(doc.id)
-        .delete();
-      promises.push(promise);
-    });
-    await Promise.all(promises);
+    // const snapshot = await this.db
+    //   .getFirestoreInstance()
+    //   .collection('parser')
+    //   .get();
+    // const promises = [];
+    // snapshot.forEach((doc) => {
+    //   const promise = this.db
+    //     .getFirestoreInstance()
+    //     .collection('parser')
+    //     .doc(doc.id)
+    //     .delete();
+    //   promises.push(promise);
+    // });
+    // await Promise.all(promises);
     const data = this.AppService.parserItems$.getValue();
     const itemsLength = this.AppService.parserItems$.getValue().length;
 
@@ -247,7 +246,7 @@ export class ScanningService {
       // const elementsSent = await this.db
       //   .getFirestoreInstance()
       //   .collection('parser-sent')
-      //   .doc('nqgFIUARWVg26mcLMtB4')
+      //   .doc('QajI331I2OoGHlQY5unW')
       //   .get();
       //
       // if (elementsSent.exists) {
@@ -322,7 +321,7 @@ ${elem.description}
       const elementsSent = await this.db
         .getFirestoreInstance()
         .collection('parser-sent')
-        .doc('nqgFIUARWVg26mcLMtB4')
+        .doc('QajI331I2OoGHlQY5unW')
         .get();
 
       if (elementsSent.exists) {
@@ -335,7 +334,7 @@ ${elem.description}
       await this.db
         .getFirestoreInstance()
         .collection('parser-sent')
-        .doc('nqgFIUARWVg26mcLMtB4')
+        .doc('QajI331I2OoGHlQY5unW')
         .set({ ids: [...elementsSentArray, elem.id] });
     } catch (error) {
       console.log('error sending to telegraf');
