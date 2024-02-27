@@ -283,8 +283,8 @@ export class ScanningService {
     //   promises.push(promise);
     // });
     // await Promise.all(promises);
-    const data = this.AppService.parserItems$.getValue();
-    const itemsLength = this.AppService.parserItems$.getValue().length;
+    // const data = this.AppService.parserItems$.getValue();
+    // const itemsLength = this.AppService.parserItems$.getValue().length;
 
     // for (let i = 0; i < itemsLength; i++) {
     //   // const elementsSentArray = [];
@@ -346,7 +346,7 @@ export class ScanningService {
     try {
       // const imageUrl = elem.image;
       const chatId = '-1001920945476';
-      const local = '-1002144996647';
+      // const local = '-1002144996647';
       const caption = `
 ${elem.title}      
 ⏰${elem.date} 
@@ -357,7 +357,7 @@ ${elem.description}
 
       await this.telegramBotService.sendPhotoToGroup(
         elem.image,
-        local,
+        chatId,
         caption,
       );
       console.log('send id', elem.id);
