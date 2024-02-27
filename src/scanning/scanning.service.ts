@@ -169,6 +169,10 @@ export class ScanningService {
       'End Scanning...',
       this.AppService.parserItems$.getValue().length,
     );
+    console.log(
+      'Ids = ',
+      this.AppService.parserItems$.getValue().map((el) => el.id),
+    );
   }
 
   async getBotUpdates() {
@@ -195,7 +199,7 @@ export class ScanningService {
           clearInterval(interval);
           console.log('end count');
         }
-      }, 1000);
+      }, 0);
     }
     console.log('end count2');
   }
