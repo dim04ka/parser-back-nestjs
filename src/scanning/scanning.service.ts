@@ -77,7 +77,7 @@ export class ScanningService {
         );
         if (yourElement) {
           await yourElement.click();
-          await delay(500);
+          await delay(100);
 
           const phoneElement = await newPage.$(
             '.shadow-filter-options-all a[href^="tel"]',
@@ -200,8 +200,9 @@ export class ScanningService {
           console.log('end count');
         }
       }, 0);
+    } else {
+      console.log('end count2');
     }
-    console.log('end count2');
   }
 
   async firestoreData() {
