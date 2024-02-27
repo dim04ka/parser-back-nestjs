@@ -24,8 +24,8 @@ export class ScanningService {
   @Cron(CronExpression.EVERY_HOUR)
   async handleScanData() {
     await this.startScanning();
-    await this.firestoreData();
     await this.getBotUpdates();
+    await this.firestoreData();
   }
 
   async startScanning() {
@@ -119,7 +119,7 @@ export class ScanningService {
             }
           }
 
-          console.log(images);
+          // console.log(images);
           // document.querySelector('#root > main > div > div.container.max-width-1270px > div.row.mx-n12px > div.col.px-12px.overflow-hidden.mb-56px > div.d-flex.flex-lg-row.flex-column.mb-md-56px.mb-20px > div.w-lg-500px.w-100.min-width-lg-500px.z-index-1.mb-lg-0.mb-18px.max-width-lg-500px > div.custom-scroll-bar.horiz.d-md-block.d-none > div > div > div.swiper-wrapper')
 
           const priceElement = await newPage.$(
@@ -195,32 +195,73 @@ export class ScanningService {
 
   async getBotUpdates() {
     console.log('getBotUpdates run ...');
-    const parserCollection = this.db
-      .getFirestoreInstance()
-      .collection('parser');
-    const elements = await parserCollection.get();
-    const elementsArray = [];
-    elements.forEach((doc) => {
-      elementsArray.push(doc.data());
-    });
+    // const parserCollection = this.db
+    //   .getFirestoreInstance()
+    //   .collection('parser');
+    // const elements = await parserCollection.get();
+    // const elementsArray = [];
+    // elements.forEach((doc) => {
+    //   elementsArray.push(doc.data());
+    // });
+    const items = this.AppService.parserItems$.getValue();
 
-    let index = 0;
-    if (elementsArray.length > 0) {
-      const interval = setInterval(() => {
-        if (index < elementsArray.length) {
-          const elem = elementsArray[index];
+    // let index = 0;
+    for (let index = 0; index < items.length; index++) {
+      let success = false;
+      let retries = 3;
 
-          this.sendPhotoToTelegram(elem);
-          console.log('count:', index);
-          index++;
-        } else {
-          clearInterval(interval);
-          console.log('end count');
+      // Повторяем запрос, пока не будет успешно выполнен или пока не закончатся попытки
+      while (!success && retries > 0) {
+        try {
+          await this.sendPhotoToTelegram(items[index]);
+          success = true;
+          const elementsSentArray = [];
+          const elementsSent = await this.db
+            .getFirestoreInstance()
+            .collection('parser-sent')
+            .doc('QajI331I2OoGHlQY5unW')
+            .get();
+
+          if (elementsSent.exists) {
+            const data = elementsSent.data();
+            if (data) {
+              elementsSentArray.push(...data['ids']);
+            }
+          }
+
+          await this.db
+            .getFirestoreInstance()
+            .collection('parser-sent')
+            .doc('QajI331I2OoGHlQY5unW')
+            .set({ ids: [...elementsSentArray, items[index].id] });
+        } catch (error) {
+          console.log(`Error sending photo: ${error}`);
+          retries--;
+          console.log(`Retries left: ${retries}`);
         }
-      }, 1000);
-    } else {
-      console.log('end getBotUpdates');
+      }
+
+      if (!success) {
+        console.log(`Failed to send photo after ${retries} retries`);
+        // Дополнительная логика для обработки ситуации, когда не удалось отправить фото
+      }
     }
+    // if (items.length > 0) {
+    //   const interval = setInterval(() => {
+    //     if (index < elementsArray.length) {
+    //       const elem = elementsArray[index];
+    //
+    //       this.sendPhotoToTelegram(elem);
+    //       console.log('count:', index);
+    //       index++;
+    //     } else {
+    //       clearInterval(interval);
+    //       console.log('end count');
+    //     }
+    //   }, 1000);
+    // } else {
+    //   console.log('end getBotUpdates');
+    // }
   }
 
   async firestoreData() {
@@ -241,38 +282,38 @@ export class ScanningService {
     const data = this.AppService.parserItems$.getValue();
     const itemsLength = this.AppService.parserItems$.getValue().length;
 
-    for (let i = 0; i < itemsLength; i++) {
-      // const elementsSentArray = [];
-      // const elementsSent = await this.db
-      //   .getFirestoreInstance()
-      //   .collection('parser-sent')
-      //   .doc('QajI331I2OoGHlQY5unW')
-      //   .get();
-      //
-      // if (elementsSent.exists) {
-      //   const data = elementsSent.data();
-      //   if (data) {
-      //     elementsSentArray.push(...data['ids']);
-      //   }
-      // }
-      // if (elementsSentArray.includes(data[i].id)) continue;
-      const uniqueId = uuidv4();
-
-      const userJson = {
-        image: data[i].image,
-        price: data[i].price,
-        title: data[i].title,
-        phone: data[i].phone,
-        description: data[i].description,
-        date: data[i].date,
-        id: data[i].id,
-      };
-      await this.db
-        .getFirestoreInstance()
-        .collection('parser')
-        .doc(uniqueId)
-        .set(userJson);
-    }
+    // for (let i = 0; i < itemsLength; i++) {
+    //   // const elementsSentArray = [];
+    //   // const elementsSent = await this.db
+    //   //   .getFirestoreInstance()
+    //   //   .collection('parser-sent')
+    //   //   .doc('QajI331I2OoGHlQY5unW')
+    //   //   .get();
+    //   //
+    //   // if (elementsSent.exists) {
+    //   //   const data = elementsSent.data();
+    //   //   if (data) {
+    //   //     elementsSentArray.push(...data['ids']);
+    //   //   }
+    //   // }
+    //   // if (elementsSentArray.includes(data[i].id)) continue;
+    // //   const uniqueId = uuidv4();
+    // //
+    // //   const userJson = {
+    // //     image: data[i].image,
+    // //     price: data[i].price,
+    // //     title: data[i].title,
+    // //     phone: data[i].phone,
+    // //     description: data[i].description,
+    // //     date: data[i].date,
+    // //     id: data[i].id,
+    // //   };
+    // //   await this.db
+    // //     .getFirestoreInstance()
+    // //     .collection('parser')
+    // //     .doc(uniqueId)
+    // //     .set(userJson);
+    // }
     const resultSync = await this.db
       .getFirestoreInstance()
       .collection('parser-sync')
@@ -301,7 +342,7 @@ export class ScanningService {
     try {
       // const imageUrl = elem.image;
       const chatId = '-1001920945476';
-      // const local = '-1002144996647';
+      const local = '-1002144996647';
       const caption = `
 ${elem.title}      
 ⏰${elem.date} 
@@ -312,30 +353,10 @@ ${elem.description}
 
       await this.telegramBotService.sendPhotoToGroup(
         elem.image,
-        chatId,
+        local,
         caption,
       );
       console.log('send id', elem.id);
-
-      const elementsSentArray = [];
-      const elementsSent = await this.db
-        .getFirestoreInstance()
-        .collection('parser-sent')
-        .doc('QajI331I2OoGHlQY5unW')
-        .get();
-
-      if (elementsSent.exists) {
-        const data = elementsSent.data();
-        if (data) {
-          elementsSentArray.push(...data['ids']);
-        }
-      }
-
-      await this.db
-        .getFirestoreInstance()
-        .collection('parser-sent')
-        .doc('QajI331I2OoGHlQY5unW')
-        .set({ ids: [...elementsSentArray, elem.id] });
     } catch (error) {
       console.log('error sending to telegraf');
     }
