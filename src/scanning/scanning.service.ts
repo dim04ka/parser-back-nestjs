@@ -238,6 +238,10 @@ export class ScanningService {
           console.log(`Error sending photo: ${error}`);
           retries--;
           console.log(`Retries left: ${retries}`);
+          if (retries > 0) {
+            console.log('Waiting for 2 seconds before retrying...');
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
         }
       }
 

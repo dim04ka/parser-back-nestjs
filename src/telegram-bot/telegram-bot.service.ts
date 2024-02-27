@@ -43,6 +43,10 @@ export class TelegramBotService {
       console.log('Photo sent successfully to group');
     } catch (error) {
       console.error('Failed to send photo to group:', error);
+      // repeat after 2 seconds
+      setTimeout(() => {
+        this.sendPhotoToGroup(imageUrls, chatId, caption);
+      }, 2000);
     }
   }
 
