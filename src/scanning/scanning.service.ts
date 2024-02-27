@@ -77,7 +77,7 @@ export class ScanningService {
         );
         if (yourElement) {
           await yourElement.click();
-          await delay(100);
+          await delay(500);
 
           const phoneElement = await newPage.$(
             '.shadow-filter-options-all a[href^="tel"]',
