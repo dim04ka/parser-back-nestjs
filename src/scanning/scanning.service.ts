@@ -30,141 +30,157 @@ export class ScanningService {
 
   async startScanning() {
     console.log('Starting Scanning...');
-    let hasBlockModal = true;
     const urls = [
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.712', // 4/114.3
     ];
+
     const browser = await puppeteer.launch({ headless: true });
+    const pages = await Promise.all(urls.map((url) => browser.newPage()));
 
-    for (const url of urls) {
-      console.log('Scanning url: ', url);
-      const page = await browser.newPage();
-      await page.goto(url);
-      await page.setViewport({ width: 1080, height: 1024 });
+    await Promise.all(
+      pages.map(async (page, index) => {
+        const url = urls[index];
+        console.log('Scanning url: ', url);
+        await page.goto(url);
+        await page.setViewport({ width: 1080, height: 1024 });
+        const modalSelector =
+          '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile';
+        await page
+          .waitForSelector(modalSelector, { timeout: 5000 })
+          .then(async () => {
+            await page.click(modalSelector);
+          })
+          .catch(() => {
+            console.log('Modal not found or timeout exceeded');
+          });
+        // let hasBlockModal = true;
+        //
+        // if (hasBlockModal) {
+        //   await page.waitForSelector(
+        //     '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
+        //   );
+        //   await page.click(
+        //     '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
+        //   );
+        //   hasBlockModal = false;
+        // }
 
-      if (hasBlockModal) {
-        await page.waitForSelector(
-          '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
-        );
-        await page.click(
-          '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
-        );
-        hasBlockModal = false;
-      }
+        // await page.screenshot({path: 'example.png'});
+        const elements = await page.$$('div.row a.text-dark');
 
-      // await page.screenshot({path: 'example.png'});
-      const elements = await page.$$('div.row a.text-dark');
+        for (const element of elements) {
+          const timeElement = await element.$('.bot_content div div');
+          const time = await timeElement.evaluate((el) => {
+            const regex = /(\d{2}\.\d{2}\.\d{4})/; // Регулярное выражение для поиска даты в формате dd.mm.yyyy
+            const match = el.innerText.match(regex); // Поиск соответствия регулярному выражению
+            return match ? match[0] : null; // Возвращаем найденную дату или null, если ничего не найдено
+          });
 
-      for (const element of elements) {
-        const timeElement = await element.$('.bot_content div div');
-        const time = await timeElement.evaluate((el) => {
-          const regex = /(\d{2}\.\d{2}\.\d{4})/; // Регулярное выражение для поиска даты в формате dd.mm.yyyy
-          const match = el.innerText.match(regex); // Поиск соответствия регулярному выражению
-          return match ? match[0] : null; // Возвращаем найденную дату или null, если ничего не найдено
-        });
+          if (time !== getCurrentDate()) continue;
+          const href = await element.evaluate((el) => el.href);
 
-        if (time !== getCurrentDate()) continue;
-        const href = await element.evaluate((el) => el.href);
+          const newPage = await browser.newPage();
+          await newPage.goto(href);
 
-        const newPage = await browser.newPage();
-        await newPage.goto(href);
-
-        const yourElement = await newPage.$(
-          '.shadow-filter-options-all i.stroke-bluepart-100',
-        );
-        if (yourElement) {
-          await yourElement.click();
-          await delay(500);
-
-          const phoneElement = await newPage.$(
-            '.shadow-filter-options-all a[href^="tel"]',
+          const yourElement = await newPage.$(
+            '.shadow-filter-options-all i.stroke-bluepart-100',
           );
-          const phone = await newPage.evaluate((el) => el.href, phoneElement);
+          if (yourElement) {
+            await yourElement.click();
+            await delay(500);
 
-          const titleElement = await newPage.$(
-            'div.mb-16px.text-overflow-ellipses-3-line.font-size-md-24.font-size-16.font-TBCX-bold',
-          );
-          const title = await newPage.evaluate(
-            (el) => el.innerText,
-            titleElement,
-          );
+            const phoneElement = await newPage.$(
+              '.shadow-filter-options-all a[href^="tel"]',
+            );
+            const phone = await newPage.evaluate((el) => el.href, phoneElement);
 
-          const descriptionElement = await newPage.$(
-            '.custom-scroll-bar.custom-scroll-bar-animated',
-          );
-          const description = await newPage.evaluate(
-            (el) => (el as HTMLElement).innerText,
-            descriptionElement,
-          );
+            const titleElement = await newPage.$(
+              'div.mb-16px.text-overflow-ellipses-3-line.font-size-md-24.font-size-16.font-TBCX-bold',
+            );
+            const title = await newPage.evaluate(
+              (el) => el.innerText,
+              titleElement,
+            );
 
-          let images = [];
+            const descriptionElement = await newPage.$(
+              '.custom-scroll-bar.custom-scroll-bar-animated',
+            );
+            const description = await newPage.evaluate(
+              (el) => (el as HTMLElement).innerText,
+              descriptionElement,
+            );
 
-          const imageElements = await newPage.$$(
-            '#root > main > div > div.container.max-width-1270px > div.row.mx-n12px > div.col.px-12px.overflow-hidden.mb-56px > div.d-flex.flex-lg-row.flex-column.mb-md-56px.mb-20px > div.w-lg-500px.w-100.min-width-lg-500px.z-index-1.mb-lg-0.mb-18px.max-width-lg-500px > div.custom-scroll-bar.horiz.d-md-block.d-none > div > div > div.swiper-wrapper .swiper-slide img',
-          );
-          if (!imageElements.length) {
-            const imageElement = await newPage.$('div.swiper-wrapper img');
-            const image = await newPage.evaluate((el) => el.src, imageElement);
-            images.push(image);
-          } else {
-            if (imageElements && imageElements.length > 0) {
-              images = await Promise.all(
-                imageElements.map(async (element) => {
-                  return await element.evaluate((el) => el.src);
-                }),
+            let images = [];
+
+            const imageElements = await newPage.$$(
+              '#root > main > div > div.container.max-width-1270px > div.row.mx-n12px > div.col.px-12px.overflow-hidden.mb-56px > div.d-flex.flex-lg-row.flex-column.mb-md-56px.mb-20px > div.w-lg-500px.w-100.min-width-lg-500px.z-index-1.mb-lg-0.mb-18px.max-width-lg-500px > div.custom-scroll-bar.horiz.d-md-block.d-none > div > div > div.swiper-wrapper .swiper-slide img',
+            );
+            if (!imageElements.length) {
+              const imageElement = await newPage.$('div.swiper-wrapper img');
+              const image = await newPage.evaluate(
+                (el) => el.src,
+                imageElement,
               );
+              images.push(image);
+            } else {
+              if (imageElements && imageElements.length > 0) {
+                images = await Promise.all(
+                  imageElements.map(async (element) => {
+                    return await element.evaluate((el) => el.src);
+                  }),
+                );
+              }
             }
+
+            // console.log(images);
+            // document.querySelector('#root > main > div > div.container.max-width-1270px > div.row.mx-n12px > div.col.px-12px.overflow-hidden.mb-56px > div.d-flex.flex-lg-row.flex-column.mb-md-56px.mb-20px > div.w-lg-500px.w-100.min-width-lg-500px.z-index-1.mb-lg-0.mb-18px.max-width-lg-500px > div.custom-scroll-bar.horiz.d-md-block.d-none > div > div > div.swiper-wrapper')
+
+            const priceElement = await newPage.$(
+              '.shadow-filter-options-all span',
+            );
+            const price = await newPage.evaluate(
+              (el) => el.innerHTML,
+              priceElement,
+            );
+
+            const dateElement = await newPage.$(
+              '.mb-24px.font-TBCX-medium.font-size-12',
+            );
+            const date = await newPage.evaluate(
+              (el) => (el.children[1] as HTMLElement).innerText,
+              dateElement,
+            );
+
+            const idElement = await newPage.$(
+              '.mb-24px.font-TBCX-medium.font-size-12',
+            );
+            const id = await newPage.evaluate(
+              (el) => (el.children[2] as HTMLElement).innerText,
+              idElement,
+            );
+
+            this.AppService.parserItems$.next([
+              ...this.AppService.parserItems$.getValue(),
+              {
+                phone,
+                title,
+                description: description || '',
+                image: images,
+                price,
+                date,
+                id,
+              },
+            ]);
           }
-
-          // console.log(images);
-          // document.querySelector('#root > main > div > div.container.max-width-1270px > div.row.mx-n12px > div.col.px-12px.overflow-hidden.mb-56px > div.d-flex.flex-lg-row.flex-column.mb-md-56px.mb-20px > div.w-lg-500px.w-100.min-width-lg-500px.z-index-1.mb-lg-0.mb-18px.max-width-lg-500px > div.custom-scroll-bar.horiz.d-md-block.d-none > div > div > div.swiper-wrapper')
-
-          const priceElement = await newPage.$(
-            '.shadow-filter-options-all span',
-          );
-          const price = await newPage.evaluate(
-            (el) => el.innerHTML,
-            priceElement,
-          );
-
-          const dateElement = await newPage.$(
-            '.mb-24px.font-TBCX-medium.font-size-12',
-          );
-          const date = await newPage.evaluate(
-            (el) => (el.children[1] as HTMLElement).innerText,
-            dateElement,
-          );
-
-          const idElement = await newPage.$(
-            '.mb-24px.font-TBCX-medium.font-size-12',
-          );
-          const id = await newPage.evaluate(
-            (el) => (el.children[2] as HTMLElement).innerText,
-            idElement,
-          );
-
-          this.AppService.parserItems$.next([
-            ...this.AppService.parserItems$.getValue(),
-            {
-              phone,
-              title,
-              description: description || '',
-              image: images,
-              price,
-              date,
-              id,
-            },
-          ]);
+          await newPage.close();
         }
-        await newPage.close();
-      }
+      }),
+    );
 
-      await page.close();
-    }
-
+    await browser.close();
     console.log(
       'End Scanning...',
       this.AppService.parserItems$.getValue().length,
@@ -195,17 +211,8 @@ export class ScanningService {
 
   async getBotUpdates() {
     console.log('getBotUpdates run ...');
-    // const parserCollection = this.db
-    //   .getFirestoreInstance()
-    //   .collection('parser');
-    // const elements = await parserCollection.get();
-    // const elementsArray = [];
-    // elements.forEach((doc) => {
-    //   elementsArray.push(doc.data());
-    // });
     const items = this.AppService.parserItems$.getValue();
 
-    // let index = 0;
     for (let index = 0; index < items.length; index++) {
       let success = false;
       let retries = 3;
@@ -250,74 +257,9 @@ export class ScanningService {
         // Дополнительная логика для обработки ситуации, когда не удалось отправить фото
       }
     }
-    // if (items.length > 0) {
-    //   const interval = setInterval(() => {
-    //     if (index < elementsArray.length) {
-    //       const elem = elementsArray[index];
-    //
-    //       this.sendPhotoToTelegram(elem);
-    //       console.log('count:', index);
-    //       index++;
-    //     } else {
-    //       clearInterval(interval);
-    //       console.log('end count');
-    //     }
-    //   }, 1000);
-    // } else {
-    //   console.log('end getBotUpdates');
-    // }
   }
 
   async firestoreData() {
-    // const snapshot = await this.db
-    //   .getFirestoreInstance()
-    //   .collection('parser')
-    //   .get();
-    // const promises = [];
-    // snapshot.forEach((doc) => {
-    //   const promise = this.db
-    //     .getFirestoreInstance()
-    //     .collection('parser')
-    //     .doc(doc.id)
-    //     .delete();
-    //   promises.push(promise);
-    // });
-    // await Promise.all(promises);
-    // const data = this.AppService.parserItems$.getValue();
-    // const itemsLength = this.AppService.parserItems$.getValue().length;
-
-    // for (let i = 0; i < itemsLength; i++) {
-    //   // const elementsSentArray = [];
-    //   // const elementsSent = await this.db
-    //   //   .getFirestoreInstance()
-    //   //   .collection('parser-sent')
-    //   //   .doc('QajI331I2OoGHlQY5unW')
-    //   //   .get();
-    //   //
-    //   // if (elementsSent.exists) {
-    //   //   const data = elementsSent.data();
-    //   //   if (data) {
-    //   //     elementsSentArray.push(...data['ids']);
-    //   //   }
-    //   // }
-    //   // if (elementsSentArray.includes(data[i].id)) continue;
-    // //   const uniqueId = uuidv4();
-    // //
-    // //   const userJson = {
-    // //     image: data[i].image,
-    // //     price: data[i].price,
-    // //     title: data[i].title,
-    // //     phone: data[i].phone,
-    // //     description: data[i].description,
-    // //     date: data[i].date,
-    // //     id: data[i].id,
-    // //   };
-    // //   await this.db
-    // //     .getFirestoreInstance()
-    // //     .collection('parser')
-    // //     .doc(uniqueId)
-    // //     .set(userJson);
-    // }
     const resultSync = await this.db
       .getFirestoreInstance()
       .collection('parser-sync')
@@ -344,7 +286,6 @@ export class ScanningService {
 
   async sendPhotoToTelegram(elem: any, retries = 3) {
     try {
-      // const imageUrl = elem.image;
       const chatId = '-1001920945476';
       // const local = '-1002144996647';
       const caption = `
