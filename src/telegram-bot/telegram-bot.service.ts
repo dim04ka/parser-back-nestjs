@@ -17,34 +17,13 @@ export class TelegramBotService {
     caption: string,
   ): Promise<void> {
     try {
-      let firstThreeImageUrl = [];
-      const media = [];
-      if (imageUrls.length > 3) {
-        firstThreeImageUrl = imageUrls.slice(0, 3);
-      } else {
-        firstThreeImageUrl = imageUrls;
-      }
-
-      for (let i = 0; i < firstThreeImageUrl.length; i++) {
-        const localImagePath = await this.downloadImage(imageUrls[i]);
-        // const imageData = fs.createReadStream(localImagePath);
-
-        media.push({
-          type: 'photo',
-          media: { source: localImagePath },
-          caption: i === 0 ? caption : '',
-        });
-      }
+      const media = await this.getMedia(imageUrls, caption);
 
       await this.bot.telegram.sendMediaGroup(chatId, media);
 
       console.log('Photo sent successfully to group');
     } catch (error) {
       console.error('Failed to send photo to group:', error);
-      // repeat after 2 seconds
-      setTimeout(() => {
-        this.sendPhotoToGroup(imageUrls, chatId, caption);
-      }, 30000);
     }
   }
 
@@ -58,5 +37,27 @@ export class TelegramBotService {
       console.error('Error downloading image:', error);
       throw error;
     }
+  }
+
+  async getMedia(imageUrls, caption) {
+    let firstThreeImageUrl = [];
+    const media = [];
+    if (imageUrls.length > 5) {
+      firstThreeImageUrl = imageUrls.slice(0, 5);
+    } else {
+      firstThreeImageUrl = imageUrls;
+    }
+
+    for (let i = 0; i < firstThreeImageUrl.length; i++) {
+      const localImagePath = await this.downloadImage(imageUrls[i]);
+      // const imageData = fs.createReadStream(localImagePath);
+
+      media.push({
+        type: 'photo',
+        media: { source: localImagePath },
+        caption: i === 0 ? caption : '',
+      });
+    }
+    return media;
   }
 }

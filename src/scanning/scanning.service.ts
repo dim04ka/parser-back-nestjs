@@ -206,52 +206,40 @@ export class ScanningService {
 
   async getBotUpdates() {
     console.log('getBotUpdates run ...');
-    const items = this.AppService.parserItems$.getValue();
 
-    for (let index = 0; index < items.length; index++) {
-      let success = false;
-      let retries = 3;
+    const interval = setInterval(async () => {
+      const items = this.AppService.parserItems$.getValue();
+      if (items.length === 0) {
+        clearInterval(interval);
+        console.log('End getBotUpdates...');
+        return;
+      }
+      try {
+        const post = items[0];
+        await this.sendPhotoToTelegram(post);
+        console.log('count: ', items.length);
+        const elementsSentArray = [];
+        const elementsSent = await this.db
+          .getFirestoreInstance()
+          .collection('parser-sent')
+          .doc('QajI331I2OoGHlQY5unW')
+          .get();
 
-      // Повторяем запрос, пока не будет успешно выполнен или пока не закончатся попытки
-      while (!success && retries > 0) {
-        try {
-          await this.sendPhotoToTelegram(items[index]);
-          success = true;
-          const elementsSentArray = [];
-          const elementsSent = await this.db
-            .getFirestoreInstance()
-            .collection('parser-sent')
-            .doc('QajI331I2OoGHlQY5unW')
-            .get();
-
-          if (elementsSent.exists) {
-            const data = elementsSent.data();
-            if (data) {
-              elementsSentArray.push(...data['ids']);
-            }
-          }
-
-          await this.db
-            .getFirestoreInstance()
-            .collection('parser-sent')
-            .doc('QajI331I2OoGHlQY5unW')
-            .set({ ids: [...elementsSentArray, items[index].id] });
-        } catch (error) {
-          console.log(`Error sending photo: ${error}`);
-          retries--;
-          console.log(`Retries left: ${retries}`);
-          if (retries > 0) {
-            console.log('Waiting for 2 seconds before retrying...');
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+        if (elementsSent.exists) {
+          const data = elementsSent.data();
+          if (data) {
+            elementsSentArray.push(...data['ids']);
           }
         }
-      }
 
-      if (!success) {
-        console.log(`Failed to send photo after ${retries} retries`);
-        // Дополнительная логика для обработки ситуации, когда не удалось отправить фото
-      }
-    }
+        await this.db
+          .getFirestoreInstance()
+          .collection('parser-sent')
+          .doc('QajI331I2OoGHlQY5unW')
+          .set({ ids: [...elementsSentArray, post.id] });
+        this.AppService.parserItems$.next(items.slice(1));
+      } catch (err) {}
+    }, 60000);
   }
 
   async firestoreData() {
