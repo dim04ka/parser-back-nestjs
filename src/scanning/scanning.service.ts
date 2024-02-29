@@ -38,37 +38,36 @@ export class ScanningService {
     ];
 
     const browser = await puppeteer.launch({ headless: true });
-    const pages = await Promise.all(urls.map((url) => browser.newPage()));
 
-    await Promise.all(
-      pages.map(async (page, index) => {
-        const url = urls[index];
+    try {
+      for (const url of urls) {
         console.log('Scanning url: ', url);
+        const page = await browser.newPage();
         await page.goto(url);
         await page.setViewport({ width: 1080, height: 1024 });
-        const modalSelector =
-          '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile';
-        await page
-          .waitForSelector(modalSelector, { timeout: 25000 })
-          .then(async () => {
-            await page.click(modalSelector);
-          })
-          .catch(() => {
-            console.log('Modal not found or timeout exceeded');
-          });
-        // let hasBlockModal = true;
-        //
-        // if (hasBlockModal) {
-        //   await page.waitForSelector(
-        //     '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
-        //   );
-        //   await page.click(
-        //     '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
-        //   );
-        //   hasBlockModal = false;
-        // }
 
-        // await page.screenshot({path: 'example.png'});
+        let hasBlockModal = true;
+
+        if (hasBlockModal) {
+          await page.waitForSelector(
+            '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile',
+          );
+          await page.click(
+            '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile > button',
+          );
+          hasBlockModal = false;
+        }
+
+        // const modalSelector = '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile';
+        // await page
+        //     .waitForSelector(modalSelector, { timeout: 25000 })
+        //     .then(async () => {
+        //       await page.click(modalSelector);
+        //     })
+        //     .catch(() => {
+        //       console.log('Modal not found or timeout exceeded');
+        //     });
+
         const elements = await page.$$('div.row a.text-dark');
 
         for (const element of elements) {
@@ -177,14 +176,19 @@ export class ScanningService {
           }
           await newPage.close();
         }
-      }),
-    );
 
-    await browser.close();
-    console.log(
-      'End Scanning...',
-      this.AppService.parserItems$.getValue().length,
-    );
+        await page.close();
+      }
+    } catch (error) {
+      console.error('Error during scanning:', error);
+    } finally {
+      await browser.close();
+      console.log('End Scanning...');
+      console.log(
+        'End Scanning...',
+        this.AppService.parserItems$.getValue().length,
+      );
+    }
 
     const values = this.AppService.parserItems$.getValue();
     const elementsSentArray = [];
