@@ -19,7 +19,9 @@ export class ScanningService {
     private AppService: AppService,
     private db: FirestoreService,
     private readonly telegramBotService: TelegramBotService,
-  ) {}
+  ) {
+    this.handleScanData();
+  }
 
   @Cron(CronExpression.EVERY_HOUR)
   async handleScanData() {

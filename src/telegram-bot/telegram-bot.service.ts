@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf } from 'telegraf';
 import axios from 'axios';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class TelegramBotService {
@@ -46,7 +44,7 @@ export class TelegramBotService {
       // repeat after 2 seconds
       setTimeout(() => {
         this.sendPhotoToGroup(imageUrls, chatId, caption);
-      }, 2000);
+      }, 30000);
     }
   }
 

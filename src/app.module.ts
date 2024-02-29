@@ -16,8 +16,4 @@ import { TelegramBotService } from './telegram-bot/telegram-bot.service';
     TelegramBotService,
   ],
 })
-export class AppModule {
-  constructor(private readonly scanningService: ScanningService) {
-    this.scanningService.handleScanData();
-  }
-}
+export class AppModule {}
