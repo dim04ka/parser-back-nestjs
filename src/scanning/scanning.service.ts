@@ -38,6 +38,7 @@ export class ScanningService {
     ];
 
     const browser = await puppeteer.launch({ headless: true });
+    let hasBlockModal = true;
 
     try {
       for (const url of urls) {
@@ -45,8 +46,6 @@ export class ScanningService {
         const page = await browser.newPage();
         await page.goto(url);
         await page.setViewport({ width: 1080, height: 1024 });
-
-        let hasBlockModal = true;
 
         if (hasBlockModal) {
           await page.waitForSelector(
@@ -57,16 +56,6 @@ export class ScanningService {
           );
           hasBlockModal = false;
         }
-
-        // const modalSelector = '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile';
-        // await page
-        //     .waitForSelector(modalSelector, { timeout: 25000 })
-        //     .then(async () => {
-        //       await page.click(modalSelector);
-        //     })
-        //     .catch(() => {
-        //       console.log('Modal not found or timeout exceeded');
-        //     });
 
         const elements = await page.$$('div.row a.text-dark');
 
