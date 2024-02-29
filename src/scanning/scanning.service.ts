@@ -49,7 +49,7 @@ export class ScanningService {
         const modalSelector =
           '#root > div.custom-modal-container.undefined > div > div.custom-modal-inner.fixed-mobile';
         await page
-          .waitForSelector(modalSelector, { timeout: 5000 })
+          .waitForSelector(modalSelector, { timeout: 25000 })
           .then(async () => {
             await page.click(modalSelector);
           })
