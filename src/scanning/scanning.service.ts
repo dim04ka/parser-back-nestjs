@@ -8,6 +8,7 @@ import { FirestoreService } from '../firestore/firestore.service';
 import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
 import * as process from 'process';
+import { Item } from '../models/item.interface';
 
 import { TelegramBotService } from '../telegram-bot/telegram-bot.service';
 
@@ -33,9 +34,9 @@ export class ScanningService {
   async startScanning() {
     console.log('Starting Scanning...');
     const urls = [
-      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
-      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
-      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
+      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
+      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
+      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.712', // 4/114.3
     ];
 
@@ -58,10 +59,22 @@ export class ScanningService {
           );
           hasBlockModal = false;
         }
+        let result: Item[] = [];
 
+        const resultSync = await this.db
+          .getFirestoreInstance()
+          .collection('parser-sent')
+          .doc('QajI331I2OoGHlQY5unW')
+          .get();
+
+        result = resultSync.data().ids;
+
+        const resultTitles = result.map((item) => item.title);
         const elements = await page.$$('div.row a.text-dark');
-
         for (const element of elements) {
+          const titleElement = await element.$('.top_content div div div');
+          const title = await titleElement.evaluate((el) => el.textContent);
+
           const timeElement = await element.$('.bot_content div div');
           const time = await timeElement.evaluate((el) => {
             const regex = /(\d{2}\.\d{2}\.\d{4})/; // Регулярное выражение для поиска даты в формате dd.mm.yyyy
@@ -69,6 +82,7 @@ export class ScanningService {
             return match ? match[0] : null; // Возвращаем найденную дату или null, если ничего не найдено
           });
 
+          if (resultTitles.includes(title)) continue;
           if (time !== getCurrentDate()) continue;
           const href = await element.evaluate((el) => el.href);
 
@@ -125,9 +139,6 @@ export class ScanningService {
               }
             }
 
-            // console.log(images);
-            // document.querySelector('#root > main > div > div.container.max-width-1270px > div.row.mx-n12px > div.col.px-12px.overflow-hidden.mb-56px > div.d-flex.flex-lg-row.flex-column.mb-md-56px.mb-20px > div.w-lg-500px.w-100.min-width-lg-500px.z-index-1.mb-lg-0.mb-18px.max-width-lg-500px > div.custom-scroll-bar.horiz.d-md-block.d-none > div > div > div.swiper-wrapper')
-
             const priceElement = await newPage.$(
               '.shadow-filter-options-all span',
             );
@@ -167,7 +178,6 @@ export class ScanningService {
           }
           await newPage.close();
         }
-
         await page.close();
       }
     } catch (error) {
@@ -181,26 +191,25 @@ export class ScanningService {
       );
     }
 
-    const values = this.AppService.parserItems$.getValue();
-    const elementsSentArray = [];
-    const elementsSent = await this.db
-      .getFirestoreInstance()
-      .collection('parser-sent')
-      .doc('QajI331I2OoGHlQY5unW')
-      .get();
-
-    if (elementsSent.exists) {
-      const data = elementsSent.data();
-      if (data) {
-        elementsSentArray.push(...data['ids']);
-      }
-    }
-    const items = values.filter((el) => !elementsSentArray.includes(el.id));
-    this.AppService.parserItems$.next(items);
-    console.log(
-      'items',
-      items.map((el) => el.id),
-    );
+    // const elementsSentArray = [];
+    // const elementsSent = await this.db
+    //   .getFirestoreInstance()
+    //   .collection('parser-sent')
+    //   .doc('QajI331I2OoGHlQY5unW')
+    //   .get();
+    //
+    // if (elementsSent.exists) {
+    //   const data = elementsSent.data();
+    //   if (data) {
+    //     elementsSentArray.push(...data['ids']);
+    //   }
+    // }
+    // const items = values.filter((el) => !elementsSentArray.includes(el.id));
+    // this.AppService.parserItems$.next(items);
+    // console.log(
+    //   'items',
+    //   items.map((el) => el.id),
+    // );
     // if (elementsSentArray.includes(data[i].id)) continue;
   }
 
@@ -236,7 +245,9 @@ export class ScanningService {
           .getFirestoreInstance()
           .collection('parser-sent')
           .doc('QajI331I2OoGHlQY5unW')
-          .set({ ids: [...elementsSentArray, post.id] });
+          .set({
+            ids: [...elementsSentArray, { id: post.id, title: post.title }],
+          });
         this.AppService.parserItems$.next(items.slice(1));
       } catch (err) {}
     }, 60000);
