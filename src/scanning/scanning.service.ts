@@ -34,9 +34,9 @@ export class ScanningService {
   async startScanning() {
     console.log('Starting Scanning...');
     const urls = [
-      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
-      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
-      // 'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
+      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.714', // 4/100
+      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.749', // 5/100
+      'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.716', // 5/112
       'https://www.myparts.ge/ru/search/?pr_type_id=3&page=1&loc_id=2&cat_id=672&Attrs=711.712', // 4/114.3
     ];
 
@@ -69,11 +69,11 @@ export class ScanningService {
 
         result = resultSync.data().ids;
 
-        const resultTitles = result.map((item) => item.title);
         const elements = await page.$$('div.row a.text-dark');
         for (const element of elements) {
           const titleElement = await element.$('.top_content div div div');
           const title = await titleElement.evaluate((el) => el.textContent);
+          if (result.find((el) => el.title === title)) continue; // pass if sent
 
           const timeElement = await element.$('.bot_content div div');
           const time = await timeElement.evaluate((el) => {
@@ -82,8 +82,9 @@ export class ScanningService {
             return match ? match[0] : null; // Возвращаем найденную дату или null, если ничего не найдено
           });
 
-          if (resultTitles.includes(title)) continue;
-          if (time !== getCurrentDate()) continue;
+          if (time !== '08.03.2024') continue;
+
+          // if (time !== getCurrentDate()) continue; // pass if not current date
           const href = await element.evaluate((el) => el.href);
 
           const newPage = await browser.newPage();
