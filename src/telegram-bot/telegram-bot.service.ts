@@ -39,11 +39,11 @@ export class TelegramBotService {
     }
   }
 
-  async getMedia(imageUrls, caption) {
+  private async getMedia(imageUrls: string[], caption: string) {
     let firstThreeImageUrl = [];
     const media = [];
-    if (imageUrls.length > 5) {
-      firstThreeImageUrl = imageUrls.slice(0, 5);
+    if (imageUrls.length > 9) {
+      firstThreeImageUrl = imageUrls.slice(0, 9);
     } else {
       firstThreeImageUrl = imageUrls;
     }

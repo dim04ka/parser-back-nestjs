@@ -48,4 +48,9 @@ export class FirestoreService {
       .get();
     return result.data().ids;
   }
+  async setSentPosts(data: Item[]) {
+    await this.db.collection('parser-sent').doc('QajI331I2OoGHlQY5unW').set({
+      ids: data,
+    });
+  }
 }

@@ -116,27 +116,13 @@ export class ScanningService {
         const post = items[0];
         await this.sendPhotoToTelegram(post);
         console.log('count: ', items.length);
-        const elementsSentArray = [];
-        const elementsSent = await this.db
-          .getFirestoreInstance()
-          .collection('parser-sent')
-          .doc('QajI331I2OoGHlQY5unW')
-          .get();
+        const elementsSentArray = await this.db.getSentPosts();
 
-        if (elementsSent.exists) {
-          const data = elementsSent.data();
-          if (data) {
-            elementsSentArray.push(...data['ids']);
-          }
-        }
+        await this.db.setSentPosts([
+          ...elementsSentArray,
+          { id: post.id, title: post.title },
+        ]);
 
-        await this.db
-          .getFirestoreInstance()
-          .collection('parser-sent')
-          .doc('QajI331I2OoGHlQY5unW')
-          .set({
-            ids: [...elementsSentArray, { id: post.id, title: post.title }],
-          });
         this.AppService.parserItems$.next(items.slice(1));
       } catch (err) {}
     }, 60000);
