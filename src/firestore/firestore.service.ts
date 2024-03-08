@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import * as dotenv from 'dotenv';
 import * as process from 'process';
+import { Item } from '../models/item.interface';
 
 dotenv.config();
 const firebaseConfig = {
@@ -38,5 +39,13 @@ export class FirestoreService {
 
   getFirestoreInstance() {
     return this.db;
+  }
+
+  async getSentPosts(): Promise<Item[]> {
+    const result = await this.db
+      .collection('parser-sent')
+      .doc('QajI331I2OoGHlQY5unW')
+      .get();
+    return result.data().ids;
   }
 }
