@@ -82,9 +82,7 @@ export class ScanningService {
             return match ? match[0] : null; // Возвращаем найденную дату или null, если ничего не найдено
           });
 
-          if (time !== '08.03.2024') continue;
-
-          // if (time !== getCurrentDate()) continue; // pass if not current date
+          if (time !== getCurrentDate()) continue; // pass if not current date
           const href = await element.evaluate((el) => el.href);
 
           const newPage = await browser.newPage();
@@ -191,27 +189,6 @@ export class ScanningService {
         this.AppService.parserItems$.getValue().length,
       );
     }
-
-    // const elementsSentArray = [];
-    // const elementsSent = await this.db
-    //   .getFirestoreInstance()
-    //   .collection('parser-sent')
-    //   .doc('QajI331I2OoGHlQY5unW')
-    //   .get();
-    //
-    // if (elementsSent.exists) {
-    //   const data = elementsSent.data();
-    //   if (data) {
-    //     elementsSentArray.push(...data['ids']);
-    //   }
-    // }
-    // const items = values.filter((el) => !elementsSentArray.includes(el.id));
-    // this.AppService.parserItems$.next(items);
-    // console.log(
-    //   'items',
-    //   items.map((el) => el.id),
-    // );
-    // if (elementsSentArray.includes(data[i].id)) continue;
   }
 
   async getBotUpdates() {
