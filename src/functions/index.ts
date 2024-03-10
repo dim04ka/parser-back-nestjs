@@ -16,8 +16,7 @@ export const hasSentTitle = async (
 ) => {
   const titleElement = await element.$('.top_content div div div');
   const title = await titleElement.evaluate((el) => el.textContent);
-  if (sentPosts.find((el) => el.title === title)) return false;
-  return true;
+  return !!sentPosts.find((el) => el.title === title);
 };
 
 export const isActualDate = async (
