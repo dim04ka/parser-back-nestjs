@@ -39,7 +39,7 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
-    "target": "node",
+    "target": "es2022",
     "esModuleInterop": true,
     "strict": true,
     "sourceMap": true,
@@ -56,8 +56,6 @@
       "*": ["node_modules/*", "./*"]
     },
     "sourceRoot": "src",
-    "assets": [{ "include": "static/testdata/**/*", "watchAssets": true }]
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "coverage", "build", "docs"],
 }

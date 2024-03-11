@@ -72,7 +72,7 @@ export class ScanningService {
 
             const { phone, title, description, images, price, date, id } =
               await scanElements(newPage);
-
+            if (sentPosts.find((post) => post.id === id)) continue;
             this.AppService.parserItems$.next([
               ...this.AppService.parserItems$.getValue(),
               {
