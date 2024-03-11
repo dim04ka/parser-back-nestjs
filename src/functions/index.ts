@@ -1,5 +1,5 @@
 import { ElementHandle, Page } from 'puppeteer';
-import { Item } from '../models/item.interface';
+import { IScanElement, Item } from '../models/item.interface';
 
 export const closeSpamModal = async (page: Page) => {
   await page.waitForSelector(
@@ -30,7 +30,7 @@ export const isActualDate = async (
   });
 };
 
-export const scanElements = async (newPage: Page) => {
+export const scanElements = async (newPage: Page): Promise<IScanElement> => {
   const phoneElement = await newPage.$(
     '.shadow-filter-options-all a[href^="tel"]',
   );
@@ -92,4 +92,13 @@ export const scanElements = async (newPage: Page) => {
     date,
     id,
   };
+};
+
+export const isElementInSentPosts = (
+  element: IScanElement,
+  sentPosts: Item[],
+) => {
+  return !!sentPosts.find(
+    ({ title, id }) => title === element.title && id === element.id,
+  );
 };

@@ -12,8 +12,10 @@ import {
   closeSpamModal,
   hasSentTitle,
   isActualDate,
+  isElementInSentPosts,
   scanElements,
 } from '../functions';
+import { IScanElement } from '../models/item.interface';
 
 dotenv.config();
 
@@ -70,20 +72,11 @@ export class ScanningService {
             await hidePhoneNumber.click();
             await delay(500);
 
-            const { phone, title, description, images, price, date, id } =
-              await scanElements(newPage);
-            if (sentPosts.find((post) => post.id === id)) continue;
+            const element = await scanElements(newPage);
+            if (isElementInSentPosts(element, sentPosts)) continue;
             this.AppService.parserItems$.next([
               ...this.AppService.parserItems$.getValue(),
-              {
-                phone,
-                title,
-                description,
-                image: images,
-                price,
-                date,
-                id,
-              },
+              { ...element },
             ]);
           }
           await newPage.close();
@@ -153,7 +146,7 @@ export class ScanningService {
       .set({ date: transactions });
   }
 
-  async sendPhotoToTelegram(elem: any, retries = 3) {
+  async sendPhotoToTelegram(elem: IScanElement) {
     try {
       const chatId = '-1001920945476';
       // const local = '-1002144996647';
@@ -166,7 +159,7 @@ ${elem.description}
 `;
 
       await this.telegramBotService.sendPhotoToGroup(
-        elem.image,
+        elem.images,
         chatId,
         caption,
       );

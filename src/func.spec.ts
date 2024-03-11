@@ -1,10 +1,22 @@
-function sum(a: number, b: number) {
-  return a + b;
-}
+import { isElementInSentPosts } from './functions';
+import { IScanElement } from './models/item.interface';
 
-// write here test for it
-describe('TelegramBotService', () => {
-  it('should be defined', () => {
-    expect(sum(1, 2)).toBe(4);
+const element: IScanElement = {
+  phone: '12345',
+  title: 'title',
+  description: 'description',
+  images: ['image'],
+  price: 'price',
+  date: 'date',
+  id: 'id',
+};
+const sentPosts = [element];
+
+describe('Parser tests ', () => {
+  it('return true when element in sentPosts', () => {
+    expect(isElementInSentPosts(element, sentPosts)).toBe(true);
+  });
+  it('return false when element not in sentPosts', () => {
+    expect(isElementInSentPosts(element, [])).toBe(false);
   });
 });
